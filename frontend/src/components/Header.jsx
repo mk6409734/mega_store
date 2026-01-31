@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React,{ useContext } from "react";
 import { Link } from "react-router-dom";
 import { Search } from "./Search";
 import Badge from "@mui/material/Badge";
@@ -10,11 +10,11 @@ import { IoMdHeartEmpty } from "react-icons/io";
 import Tooltip from "@mui/material/Tooltip";
 import { Navbar } from "./Navbar";
 import { MyContext } from "../App";
-
-import { Button } from "@mui/material";
 import { UserAccountDetails } from "./UserAccount";
+import { FrontStore } from "../Store/Store";
 
 export const Header = () => {
+  const { islogin } = FrontStore();
   const context = useContext(MyContext);
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
@@ -65,7 +65,7 @@ export const Header = () => {
             <Search />
           </div>
           <div className=" flex items-center gap-2">
-            {context.isLogin === false ? (
+            {islogin === false ? (
               <div className="">
                 <Link className="link" to="/login">
                   Login

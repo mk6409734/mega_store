@@ -23,7 +23,7 @@ export const auth = async (req, res, next) => {
     req.userId = decode.id;
     next();
   } catch (error) {
-    return res.status(500).json({
+    return res.status(401).json({
       message: "You have to login first",
       error: true,
       success: false,

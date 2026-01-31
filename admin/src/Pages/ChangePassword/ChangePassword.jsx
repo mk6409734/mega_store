@@ -1,13 +1,44 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { CiLogin, CiUser } from "react-icons/ci";
 
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import { adminStore } from "../../Store/Store";
 
 
 export const ChangePassword = () => {
+ const [formfields, setFormfields] = useState({
+     newPassword: "",
+     confirmPassword: "",
+   });
  
+   const { ResetPassword } = adminStore();
+
+    const handleInputchange = (e) => {
+       const { name, value } = e.target;
+       setFormfields((prev) => ({ ...prev, [name]: value }));
+     };
+   
+     const navigate = useNavigate();
+   
+     const email = localStorage.getItem("userEmail");
+
+     const handleOnSubmit = async (e) => {
+       e.preventDefault();
+       const res = await ResetPassword({
+         email,
+         newPassword: formfields.newPassword,
+         confirmPassword: formfields.confirmPassword,
+       });
+       if (res.success) {
+         localStorage.removeItem("userEmail");
+         localStorage.removeItem("UserName");
+         localStorage.removeItem("actionType");
+         navigate("/login");
+       }
+     };
+
   return (
     <section className="bg-white w-full h-full fixed top-0 left-0 overflow-y-auto">
       <header className="w-full fixed top-0 left-0 px-7 py-2 z-50 flex  items-center justify-between">
@@ -57,21 +88,20 @@ export const ChangePassword = () => {
         </div>
         <Typography variant="h3" gutterBottom className="!text-center !mt-5">
           Welcome Back! <br />
-          You can change your password from here 
+          You can change your password from here
         </Typography>
-      
 
         <br />
 
-        
-
         <br />
 
-        <form className="w-full px-8 mt-3">
-          
+        <form onSubmit={handleOnSubmit} className="w-full px-8 mt-3">
           <div className="mb-4 w-full flex flex-col gap-3">
             <label className="font-medium">New Password</label>
             <input
+              name="newPassword"
+              value={formfields.newPassword}
+              onChange={handleInputchange}
               type="password"
               className="w-full h-12 border border-gray-300 rounded-md focus:border-[#1f2322] focus:outline-none px-3"
             />
@@ -79,14 +109,19 @@ export const ChangePassword = () => {
           <div className="mb-4 w-full flex flex-col gap-3">
             <label className="font-medium">Confirm Password</label>
             <input
+              name="confirmPassword"
+              value={formfields.confirmPassword}
+              onChange={handleInputchange}
               type="password"
               className="w-full h-12 border border-gray-300 rounded-md focus:border-[#1f2322] focus:outline-none px-3"
             />
           </div>
 
-          
           <div className="mt-3">
-            <Button className="!capitalize !bg-[#1f2322] !w-full !text-white !py-3">
+            <Button
+              type="submit"
+              className="!capitalize !bg-[#1f2322] !w-full !text-white !py-3"
+            >
               Change Password
             </Button>
           </div>

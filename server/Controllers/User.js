@@ -127,7 +127,7 @@ export const VerifyEmail = async (req, res) => {
 };
 export const RegenrateOTP = async (req, res) => {
   try {
-    const {name, email } = req.body;
+    const { name, email } = req.body;
 
     const user = await UserModel.findOne({ email: email });
     if (!user) {
@@ -137,7 +137,7 @@ export const RegenrateOTP = async (req, res) => {
     }
     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = verifyCode;
-    user.otp_expiry = Date.now() + 600000
+    user.otp_expiry = Date.now() + 600000;
     await user.save();
     const { subject, text, html } = VerificationEmail(name, verifyCode);
     const verifyEmail = await sendEmailFun(email, subject, text, html);
@@ -156,6 +156,14 @@ export const RegenrateOTP = async (req, res) => {
 };
 
 export const Login = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      message: errors.array()[0].msg,
+      error: true,
+      success: false,
+    });
+  }
   try {
     const { email, password } = req.body;
 
@@ -177,6 +185,13 @@ export const Login = async (req, res) => {
       });
     }
     if (user.verify_email !== true) {
+      // send verification email
+      const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const { subject, text, html } = VerificationEmail(user.name, verifyCode);
+      const verifyEmail = await sendEmailFun(email, subject, text, html);
+      user.otp = verifyCode;
+      user.otp_expiry = Date.now() + 600000;
+      await user.save();
       return res.status(400).json({
         message: "Your email is not verified",
         error: true,
@@ -214,10 +229,12 @@ export const Login = async (req, res) => {
       message: "Login successfully",
       error: false,
       success: true,
+      email_verify: user.verify_email,
       data: {
         accesstoken,
         refreshtoken,
       },
+      user,
     });
   } catch (error) {
     return res.status(500).json({
@@ -282,10 +299,14 @@ export const UserAvatar = async (req, res) => {
     }
 
     const imgUrl = user.avatar;
-    const urlArr = imgUrl.split("/");
-    const avatar_image = urlArr[urlArr.length - 1];
-    const imageName = avatar_image.split(".")[0];
-    const destroyResult = await cloudinary.uploader.destroy(imageName);
+    if (imgUrl && imgUrl.includes("cloudinary")) {
+      const urlArr = imgUrl.split("/");
+      const avatar_image = urlArr[urlArr.length - 1];
+      const imageName = avatar_image.split(".")[0];
+      if (imageName) {
+        await cloudinary.uploader.destroy(imageName);
+      }
+    }
     // Use req.files for multer.array() or req.file for multer.single()
     const files = req.files || (req.file ? [req.file] : []);
 
@@ -482,6 +503,7 @@ export const Forgotpassword = async (req, res) => {
       message: "check your email",
       error: false,
       success: true,
+      user,
     });
   } catch (error) {
     return res.status(500).json({

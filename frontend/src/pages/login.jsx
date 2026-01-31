@@ -1,34 +1,74 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
 import { Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { FrontStore } from "../Store/Store";
+import { GoogleLogin } from "@react-oauth/google";
 
 export const Login = () => {
   const [formfields, setFormfields] = useState({
     email: "",
     password: "",
   });
+  const [errors, setErrors] = useState("");
 
+  const {
+    Login,
+    islogin,
+    setIsLogin,
+    GoogleLogin: handleGoogleLoginAction,
+    ForgotPassword,
+  } = FrontStore();
+  
+  const navigate = useNavigate();
   const handleInputchange = (e) => {
     const { name, value } = e.target;
     setFormfields((prev) => ({ ...prev, [name]: value }));
   };
 
-  const history = useNavigate();
+  const forgotPassword = async () => {
+    if (formfields.email === "") {
+      toast.error("Please enter email ID");
+      return false;   
+    }else{
+      const res = await ForgotPassword(formfields.email);
+      console.log("res",res);
+      toast.success(`OTP Send to ${formfields.email}`)
+      navigate("/verify");   
+      localStorage.setItem("userEmail", formfields.email)
+      localStorage.setItem("UserName", res.user.name)
+      localStorage.setItem("actionType", "forgot-password")
 
-  const forgotPassword = () => {
-    if (formfields.email !== "") {
-      history("/verify");
-      toast.success("OTP Send");
     }
   };
 
-  const handleOnSubmit = (e) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await handleGoogleLoginAction(credentialResponse.credential);
+    if (res?.success) {
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    if (islogin) {
+      navigate("/");
+    }
+  }, [islogin, navigate]);
+
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
-    console.log(formfields);
+    setErrors("");
+    const res = await Login(formfields); 
+    if (res.success) {
+      navigate("/");
+    }else{
+      setErrors(res?.message || "Login Failed")
+    }
   };
 
   return (
@@ -46,7 +86,7 @@ export const Login = () => {
                 value={formfields.email}
                 onChange={handleInputchange}
                 type="email"
-                id="outlined-basic"
+                
                 label="Email Id *"
                 variant="outlined"
                 className="w-full"
@@ -58,13 +98,17 @@ export const Login = () => {
                 value={formfields.password}
                 onChange={handleInputchange}
                 type="password"
-                id="outlined-basic"
+                
                 label="Password *"
                 variant="outlined"
                 className="w-full"
               />
             </div>
-
+            {errors && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 mb-5">
+                {errors}
+              </div>
+            )}
             <a
               className="link cursor-pointer text-sm font-semibold"
               onClick={forgotPassword}
@@ -92,10 +136,15 @@ export const Login = () => {
             <p className="font-medium text-center mb-3 text-sm">
               Or continue with social account
             </p>
-            <Button className="flex gap-3 w-full !bg-[#f1f1f1] !text-black !p-3 !px-3 !rounded-md">
-              <FcGoogle className="text-xl" />
-              Login With Google
-            </Button>
+            <div className="flex items-center justify-center">
+              <GoogleLogin
+                className="w-full"
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  setErrors("Google Login Failed");
+                }}
+              />
+            </div>
           </form>
         </div>
       </div>

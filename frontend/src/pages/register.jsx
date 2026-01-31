@@ -12,7 +12,11 @@ export const Register = () => {
     password: "",
   });
   const [errors, setErrors] = useState("");
-  const { Register, GoogleLogin: handleGoogleLoginAction } = FrontStore();
+  const {
+    Register,
+    GoogleLogin: handleGoogleLoginAction,
+    loading,
+  } = FrontStore();
   const navigate = useNavigate();
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -36,10 +40,9 @@ export const Register = () => {
     const res = await Register(formFields);
     if (res?.success) {
       setErrors("");
-      localStorage.setItem("userEmail", formFields.email)
-      setTimeout(() => {
-        navigate("/verify");
-      }, 1000); // Navigate to home after 1 second
+      localStorage.setItem("userEmail", formFields.email);
+
+      navigate("/verify");
     } else {
       setErrors(res?.message || "Registration failed");
     }
@@ -99,10 +102,11 @@ export const Register = () => {
 
             <div className="flex items-center w-full mt-3 mb-3">
               <Button
+                disabled={loading === true ? true : false}
                 type="submit"
                 className="!bg-primary !px-3 !p-3 !rounded-md !text-white w-full"
               >
-                Register
+                {loading ? "Registering..." : "Register"}
               </Button>
             </div>
 

@@ -9,13 +9,21 @@ import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
 // Import Zustand store
 import { adminStore } from "../../Store/Store";
+import { Link, useNavigate } from "react-router-dom";
 
 export const MyAccUI = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-
+  const navigate = useNavigate();
   // Access Zustand store state and actions
-  const { user, logout } = adminStore();
+  const { user, islogin, Logout: handleLogout } = adminStore();
+
+  const name = JSON.parse(localStorage.getItem("name")) || "Guest";
+  const email =
+    JSON.parse(localStorage.getItem("email")) || "email@example.com";
+  const avatar = localStorage.getItem("avatar")
+    ? JSON.parse(localStorage.getItem("avatar"))
+    : null;
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -24,10 +32,10 @@ export const MyAccUI = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  const handleLogout = () => {
-    logout(); // This will clear all user data and set isLogin to false
+  const logout = () => {
+    handleLogout();
     handleClose();
+    navigate("/login");
   };
 
   return (
@@ -36,11 +44,19 @@ export const MyAccUI = () => {
         onClick={handleClick}
         className="rounded-full w-10 h-10 overflow-hidden cursor-pointer"
       >
-        <img
-          src="./avatar.jpg"
-          alt="user"
-          className="w-full h-full object-contain"
-        />
+        {islogin && avatar ? (
+          <img
+            src={avatar}
+            alt="user"
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <div className="bg-gray-700 rounded-full w-full h-full flex items-center justify-center">
+            <span className="text-2xl font-semibold text-white">
+              {(name[0] || "").toUpperCase()}
+            </span>
+          </div>
+        )}
       </div>
       <Menu
         anchorEl={anchorEl}
@@ -82,26 +98,30 @@ export const MyAccUI = () => {
         <MenuItem className="!bg-white">
           <div className="flex items-center gap-3">
             <div className="rounded-full w-10 h-10 overflow-hidden cursor-pointer">
-              <img
-                src="./avatar.jpg"
-                alt="user"
-                className="w-full h-full object-contain"
-              />
+              {islogin && (
+                <img
+                  src={avatar || "./avatar.jpg"}
+                  alt="user"
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
             <div className="info flex flex-col">
               <h1 className="text-lg font-medium leading-5">
-                {user?.name || "Admin User"}
+                {name || "Admin User"}
               </h1>
               <p className="text-sm font-normal opacity-70">
-                {user?.email || "admin@example.com"}
+                {email || "admin@example.com"}
               </p>
             </div>
           </div>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleClose}>
-          <Avatar /> Profile
-        </MenuItem>
+        <Link to="/profile">
+          <MenuItem onClick={handleClose}>
+            <Avatar /> Profile
+          </MenuItem>
+        </Link>
         <MenuItem onClick={handleClose}>
           <Avatar /> My account
         </MenuItem>
@@ -118,7 +138,7 @@ export const MyAccUI = () => {
           </ListItemIcon>
           Settings
         </MenuItem>
-        <MenuItem onClick={handleLogout}>
+        <MenuItem onClick={logout}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

@@ -1,30 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { CiLogin, CiUser } from "react-icons/ci";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { OtpBox } from "./OtpBox";
 import { FrontStore } from "../../../../frontend/src/Store/Store";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { adminStore } from "../../Store/Store";
 
 export const VerifyAccount = () => {
   const [otp, setOtp] = useState("");
-  const { VerifyOtp } = FrontStore();
+  const [timer, setTimer] = useState(0);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const { VerifyOtp, ReGenOtp, VerifyForgotPassword } = adminStore();
   const navigate = useNavigate();
   const email = localStorage.getItem("userEmail");
+  const name = localStorage.getItem("UserName");
+
+  // Timer effect
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0 && isButtonDisabled) {
+      setIsButtonDisabled(false);
+    }
+    return () => clearInterval(interval);
+  }, [timer, isButtonDisabled]);
 
   const handleOtpChange = (value) => {
     setOtp(value);
   };
 
+  const handleReGen = () => {
+    ReGenOtp({ name, email });
+    // Start 60 second countdown
+    setTimer(60);
+    setIsButtonDisabled(true);
+  };
+
+  const actionType = localStorage.getItem("actionType");
+
   const handleformSubmit = async (e) => {
     e.preventDefault();
-    const res = await VerifyOtp({ email, otp });
-    if (res?.success) {
-      navigate("/");
+    if (actionType !== "forgot-password") {
+      const res = await VerifyOtp({ email, otp });
+      if (res.success) {
+        setOtp("");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("accesstoken");
+        localStorage.removeItem("email");
+        localStorage.removeItem("name");
+        navigate("/login");
+      }
+    } else {
+      const res = await VerifyForgotPassword({ email, otp });
+      if (res.success) {
+        navigate("/change-password");
+      }
     }
   };
- 
 
   return (
     <section className="bg-white w-full h-screen fixed top-0 left-0">
@@ -87,7 +124,15 @@ export const VerifyAccount = () => {
             </span>
           </p>
           <OtpBox length={6} onChange={handleOtpChange} />
-
+          <div className="flex items-center justify-center">
+            <Button
+              onClick={handleReGen}
+              disabled={isButtonDisabled}
+              className="!bg-primary !text-white disabled:!opacity-50 disabled:!cursor-not-allowed"
+            >
+              {isButtonDisabled ? `Re-generate in ${timer}s` : "Re-generate"}
+            </Button>
+          </div>
           <div className="flex items-center justify-center ">
             <Button type="submit" className="w-1/2 !text-white  !bg-primary ">
               Verify otp

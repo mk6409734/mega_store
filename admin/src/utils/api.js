@@ -34,7 +34,13 @@ api.interceptors.response.use(
     // Handle 401 errors (unauthorized)
     if (error.response?.status === 401) {
       localStorage.removeItem("accesstoken");
-      localStorage.removeItem("user");
+      localStorage.removeItem("refreshtoken");
+      localStorage.removeItem("name");
+      localStorage.removeItem("email");
+      localStorage.removeItem("avatar");
+      localStorage.removeItem("mobile");
+      localStorage.removeItem("userEmail");
+
       // Redirect to login if not already there
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
@@ -66,10 +72,12 @@ export const authAPI = {
         "Content-Type": "multipart/form-data",
       },
     }),
-  UpdateUser: (data) => api.put("/user/update-user", data),
+  removeAvatar: (url) =>
+    api.delete("/user/delete-avatar", { params: { img: url } }),
+  UpdateUser: (data, id) => api.put(`/user/:${id}`, data),
 };
 
-export const AddressApi = {
-  addAddress: (address) => api.post("/address/add-address", address),
+export const AdderssApi = {
+  addAdderss: (address) => api.post("/address/add-address", address),
   getAddress: () => api.get("/address/get-address"),
 };

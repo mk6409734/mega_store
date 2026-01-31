@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const addressSchema = mongoose.Schema(
   {
-    address_line: {
+    address_line1: {
       type: String,
       default: "",
     },
@@ -30,10 +30,12 @@ const addressSchema = mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.ObjectId,
-      default: "",
+      ref: "user",
+      required: true,
+      unique: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
- 
+
 export const AddressModel = mongoose.model("address", addressSchema);

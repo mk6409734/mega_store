@@ -22,7 +22,10 @@ export const Navbar = () => {
               </Link>
             </li>
             <li className="relative">
-              <Link to="/productlisting" className="link transition font-medium">
+              <Link
+                to="/productlisting"
+                className="link transition font-medium"
+              >
                 <Button className="link transition !font-medium !text-[rgba(0,0,0,0.8)] hover:!text-[#ff5252] !py-4">
                   Fashion
                 </Button>
@@ -36,46 +39,47 @@ export const Navbar = () => {
                         Men
                         <IoIosArrowForward />
                       </Button>
-                      <div className="menu absolute top-5 left-0 min-w-48 bg-white shadow-md opacity-0 transition-all">
-                        <ul>
-                          <li>
-                            <Link to="/">
-                              <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
-                                T-Shirt
-                              </Button>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link to="/">
-                              <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
-                                Jeans
-                              </Button>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link to="/">
-                              <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
-                                Footwear
-                              </Button>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link to="/">
-                              <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
-                                Watch
-                              </Button>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link to="/">
-                              <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
-                                Accessories
-                              </Button>
-                            </Link>
-                          </li>
-                        </ul>
-                      </div>
                     </Link>
+
+                    <div className="menu absolute top-5 left-0 min-w-48 bg-white shadow-md opacity-0 transition-all">
+                      <ul>
+                        <li>
+                          <Link to="/">
+                            <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
+                              T-Shirt
+                            </Button>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/">
+                            <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
+                              Jeans
+                            </Button>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/">
+                            <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
+                              Footwear
+                            </Button>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/">
+                            <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
+                              Watch
+                            </Button>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/">
+                            <Button className="!text-gray-600 w-full !justify-start !rounded-none hover:!text-[#ff5252]">
+                              Accessories
+                            </Button>
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
                   </li>
                   <li>
                     <Link to="/">
@@ -109,7 +113,10 @@ export const Navbar = () => {
               </div>
             </li>
             <li>
-              <Link to="/productdetails" className="link transition font-medium">
+              <Link
+                to="/productdetails"
+                className="link transition font-medium"
+              >
                 <Button className="link transition !font-medium !text-[rgba(0,0,0,0.8)] hover:!text-[#ff5252] !py-4">
                   Electronics
                 </Button>

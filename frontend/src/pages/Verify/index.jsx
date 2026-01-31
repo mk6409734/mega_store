@@ -6,14 +6,28 @@ import { FrontStore } from "../../Store/Store";
 
 export const Verify = () => {
   const [otp, setOtp] = useState("");
-  const { VerifyOtp, ReGenOtp } = FrontStore();
+  const [timer, setTimer] = useState(0);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const { VerifyOtp, ReGenOtp, VerifyForgotPassword } = FrontStore();
   const navigate = useNavigate();
-  const userStr = localStorage.getItem("user");
-  const data = userStr ? JSON.parse(userStr) : null;
-
-  const { name } = data;
 
   const email = localStorage.getItem("userEmail");
+  const name = localStorage.getItem("UserName");
+
+
+ // Timer effect
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0 && isButtonDisabled) {
+      setIsButtonDisabled(false);
+    }
+    return () => clearInterval(interval);
+  }, [timer, isButtonDisabled]);
+
 
   const handleOtpChange = (value) => {
     setOtp(value);
@@ -21,15 +35,30 @@ export const Verify = () => {
 
   const handleReGen = () => {
     ReGenOtp({ name, email });
+    // Start 60 second countdown
+    setTimer(60);
+    setIsButtonDisabled(true);
   };
+
+  const actionType = localStorage.getItem("actionType");
 
   const handleformSubmit = async (e) => {
     e.preventDefault();
-    const res = await VerifyOtp({ email, otp });
-    if (res.success) {
-      setOtp("");
-      navigate("/login");
-      localStorage.removeItem("userEmail")
+    if (actionType !== "forgot-password") {
+      const res = await VerifyOtp({ email, otp });
+      if (res.success) {
+        setOtp("");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("accesstoken");
+        localStorage.removeItem("email");
+        localStorage.removeItem("name");
+        navigate("/login");
+      }
+    } else {
+      const res = await VerifyForgotPassword({email, otp})
+     if(res.success){
+      navigate("/forgot-password")
+     }
     }
   };
 
@@ -54,8 +83,12 @@ export const Verify = () => {
             </p>
             <OtpBox length={6} onChange={handleOtpChange} />
             <div>
-              <Button onClick={handleReGen} className="text-primary btn-org">
-                Re-genrate
+              <Button
+                onClick={handleReGen}
+                disabled={isButtonDisabled}
+                className="text-primary btn-org disabled:!opacity-50 disabled:!cursor-not-allowed"
+              >
+                {isButtonDisabled ? `Re-generate in ${timer}s` : "Re-generate"}
               </Button>
             </div>
 

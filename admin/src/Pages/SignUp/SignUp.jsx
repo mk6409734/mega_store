@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { CiLogin, CiUser } from "react-icons/ci";
 import "./SignUp.css";
 import Button from "@mui/material/Button";
@@ -8,8 +8,22 @@ import { FcGoogle } from "react-icons/fc";
 import { BsFacebook } from "react-icons/bs";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import { adminStore } from "../../Store/Store";
+import { GoogleLogin } from "@react-oauth/google";
 
 export const SignUp = () => {
+  const [formFields, setFormFields] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState("");
+  const {
+    Register,
+    GoogleLogin: handleGoogleLoginAction,
+    loading,
+  } = adminStore();
+  const navigate = useNavigate();
   const [loadinggooogle, setLoadingGoogle] = useState(false);
   const [loadingfacebook, setLoadingFacebook] = useState(false);
   function handleClickGoogle() {
@@ -18,6 +32,35 @@ export const SignUp = () => {
   function handleClickfacebook() {
     setLoadingFacebook(true);
   }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await handleGoogleLoginAction(credentialResponse.credential);
+    if (res?.success) {
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+    }
+  };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormFields((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors("");
+
+    const res = await Register(formFields);
+    console.log("res", res);
+    if (res?.success) {
+      setErrors("");
+      localStorage.setItem("userEmail", formFields.email);
+
+      navigate("/verify-account");
+    } else {
+      setErrors(res?.message || "Registration failed");
+    }
+  };
   return (
     <section className="bg-white w-full h-full fixed top-0 left-0 overflow-y-auto">
       <header className="w-full fixed top-0 left-0 px-7 py-2 z-50 flex  items-center justify-between">
@@ -67,17 +110,12 @@ export const SignUp = () => {
         </Typography>
         <div className="flex items-center justify-center gap-5 w-full mt-5">
           {" "}
-          <Button
-            className="!capitalize px-1 md:!px-5 !text-gray-500"
-            size="small"
-            onClick={handleClickGoogle}
-            endIcon={<FcGoogle />}
-            loading={loadinggooogle}
-            loadingPosition="end"
-            variant="outlined"
-          >
-            Signin with Google
-          </Button>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setErrors("Google Login Failed");
+            }}
+          />
           <Button
             className="!capitalize px-1 md:!px-5 !text-gray-500"
             size="small"
@@ -101,10 +139,13 @@ export const SignUp = () => {
 
         <br />
 
-        <form className="w-full px-8 mt-3">
+        <form onSubmit={handleSubmit} className="w-full px-8 mt-3">
           <div className="mb-4 w-full flex flex-col gap-3">
             <label className="font-medium">Full Name</label>
             <input
+              name="name"
+              value={formFields.name}
+              onChange={handleChange}
               type="text"
               className="w-full h-12 border border-gray-300 rounded-md focus:border-[#1f2322] focus:outline-none px-3"
             />
@@ -112,6 +153,9 @@ export const SignUp = () => {
           <div className="mb-4 w-full flex flex-col gap-3">
             <label className="font-medium">Email</label>
             <input
+              name="email"
+              value={formFields.email}
+              onChange={handleChange}
               type="email"
               className="w-full h-12 border border-gray-300 rounded-md focus:border-[#1f2322] focus:outline-none px-3"
             />
@@ -119,11 +163,18 @@ export const SignUp = () => {
           <div className="mb-4 w-full flex flex-col gap-3">
             <label className="font-medium">Password</label>
             <input
+              name="password"
+              value={formFields.password}
+              onChange={handleChange}
               type="password"
               className="w-full h-12 border border-gray-300 rounded-md focus:border-[#1f2322] focus:outline-none px-3"
             />
           </div>
-
+          {errors && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 mb-5">
+              {errors}
+            </div>
+          )}
           <div className="checkbox flex items-center justify-between">
             <div>
               <FormControlLabel
@@ -133,8 +184,11 @@ export const SignUp = () => {
             </div>
           </div>
           <div className="mt-3">
-            <Button className="!capitalize !bg-[#1f2322] !w-full !text-white !py-3">
-              Sign Up
+            <Button type="submit"
+              disabled={loading === true ? true : false}
+              className="!capitalize !bg-[#1f2322] !w-full !text-white !py-3"
+            >
+              {loading ? "Registering..." : "Register"}
             </Button>
           </div>
         </form>

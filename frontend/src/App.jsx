@@ -17,7 +17,7 @@ function App() {
   const [fullWidth, setFullWidth] = useState(true);
   const [maxWidth, setMaxWidth] = useState("lg");
   const [opencart, setOpenCart] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  
 
   const toggleCartPanel = (newOpen) => () => {
     setOpenCart(newOpen);
@@ -32,8 +32,6 @@ function App() {
     setOpenCart,
     toggleCartPanel,
     opencart,
-    isLogin,
-    setIsLogin,
   };
 
   return (

@@ -15,6 +15,7 @@ import Orders from "./Pages/Orders/Orders";
 import { ForgotPassword } from "./Pages/ForgotPassword/ForgotPassword";
 import { VerifyAccount } from "./Pages/VerifyAccount/VerifyAccount";
 import { ChangePassword } from "./Pages/ChangePassword/ChangePassword";
+import { Profile } from "./Pages/Profile/Profile";
 
 export const Router = () => {
   return (
@@ -29,6 +30,7 @@ export const Router = () => {
           <Route path={"/subcategory/list"} element={<SubCategoryList />} />
           <Route path={"/users"} element={<Users />} />
           <Route path={"/orders"} element={<Orders />} />
+          <Route path={"/profile"} element={<Profile />} />
         </Route>
         <Route path={"/login"} element={<Login />} />
         <Route path={"/signup"} element={<SignUp />} />

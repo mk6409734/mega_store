@@ -30,21 +30,29 @@ userRouter.post(
 
     check(
       "password",
-      "Please enter a password with 6 or more characters"
+      "Please enter a password with 6 or more characters",
     ).isLength({
       min: 6,
     }),
   ],
-  Register
+  Register,
 );
 userRouter.post("/google-login", GoogleLogin);
-userRouter.post("/login", Login);
+userRouter.post(
+  "/login",
+  //**********************************Validations**********************************/
+  [
+    check("email", "Please input valid email").isEmail(),
+    check("password", "Password is required").exists(),
+  ],
+  Login,
+);
 userRouter.get("/logout", auth, Logout);
 userRouter.post("/verifyemail", VerifyEmail);
 userRouter.post("/re-genrateotp", RegenrateOTP);
 userRouter.put("/user-avatar", auth, upload.array("avatar"), UserAvatar);
 userRouter.delete("/delete-avatar", auth, RemoveImage);
-userRouter.put("/:id", auth, UpdateUser);
+userRouter.put("/update-user", auth, UpdateUser);
 userRouter.post("/forgotpassword", Forgotpassword);
 userRouter.post("/verifyforgotpassword", VerifyForgotpassword);
 userRouter.post("/resetpassword", Resetpassword);

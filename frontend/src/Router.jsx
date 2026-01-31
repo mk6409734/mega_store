@@ -17,6 +17,7 @@ import { Checkout } from "./pages/Checkout";
 import { MyAccount } from "./pages/MyAccount";
 import { MyList } from "./pages/MyList/MyList";
 import { Orders } from "./pages/Orders";
+import { MyAddress } from "./pages/MyAddress/MyAddress";
 
 export const Router = ({ values, context }) => {
   const Context = context;
@@ -53,6 +54,7 @@ export const Router = ({ values, context }) => {
           />
           <Route path={"/checkout"} exact={true} element={<Checkout />} />
           <Route path={"/my-account"} exact={true} element={<MyAccount />} />
+          <Route path={"/my-address"} exact={true} element={<MyAddress />} />
           <Route path={"/my-list"} exact={true} element={<MyList />} />
           <Route path={"/my-orders"} exact={true} element={<Orders />} />
         </Routes>

@@ -16,7 +16,7 @@ import { IoMoonOutline } from "react-icons/io5";
 
 export const Header = () => {
   // Access Zustand store state and actions
-  const { isLogin, isSidebarCollapsed, toggleSidebar, setDarkMode, darkmode } =
+  const { islogin, isSidebarCollapsed, toggleSidebar, setDarkMode, darkmode } =
     adminStore();
 
   return (
@@ -62,7 +62,7 @@ export const Header = () => {
         </Button>
 
         {/* Conditionally render based on login state */}
-        {isLogin ? (
+        {islogin ? (
           <MyAccUI />
         ) : (
           <Link to="/login">
