@@ -6,44 +6,88 @@ import { IoClose } from "react-icons/io5";
 import Button from "@mui/material/Button";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { adminStore } from "../../Store/Store";
+import { CateoryApi } from "../../utils/api";
 import toast from "react-hot-toast";
 
-export const AddSubCategory = () => {
-  const { GetCategory, CreateCategory, loading } = adminStore();
-  const [categories, setCategories] = useState([]);
+export const EditSubCategory = () => {
+  
+  const {
+    GetCategory,
+    loading,
+    dialogProps,
+    handleClose,
+    setCategories,
+  } = adminStore();
+  const [categories, setCategoriesState] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     parentId: "",
     parentCatName: "",
+    _id: "",
   });
   const [selectedRoot, setSelectedRoot] = useState("");
 
   useEffect(() => {
-    // Fetch categories on mount
+    // Fetch categories for the parent dropdown
     const fetchCategories = async () => {
       const res = await GetCategory();
       if (res && res.data) {
-        setCategories(res.data);
+        setCategoriesState(res.data);
       }
     };
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (dialogProps?.categoryData) {
+      const data = dialogProps.categoryData;
+      setFormData({
+        name: data.name || "",
+        parentId: data.parentId || "",
+        parentCatName: data.parentCatName || "",
+        _id: data._id,
+      });
+
+      // Determine Root Category
+      if (data.parentId) {
+        // ... (Logic remains same)
+      }
+    }
+  }, [dialogProps]);
+
+  // Separate effect to set selectedRoot once categories are loaded and formData is set
+  useEffect(() => {
+    if (categories.length > 0 && formData.parentId) {
+      const rootCat = categories.find((c) => c._id === formData.parentId);
+      if (rootCat) {
+        // The parent is a Root category
+        setSelectedRoot(formData.parentId);
+      } else {
+        // The parent is likely a subcategory. Find its parent (the Root).
+        const grandParent = categories.find(
+          (c) =>
+            c.children &&
+            c.children.some((child) => child._id === formData.parentId),
+        );
+        if (grandParent) {
+          setSelectedRoot(grandParent._id);
+        }
+      }
+    }
+  }, [categories, formData.parentId]);
+
   const handleInput = (e) => {
     const { name, value } = e.target;
     if (name === "ProductCategory") {
-      // Root level category selected
       const selectedCat = categories.find((cat) => cat._id === value);
       setSelectedRoot(value);
       setFormData((prev) => ({
         ...prev,
-        parentId: value, // Default to root ID
+        parentId: value,
         parentCatName: selectedCat ? selectedCat.name : "",
       }));
     } else if (name === "SecondLevelCategory") {
-      // Second level category selected (optional)
       if (value === "") {
-        // User selected "Select Sub Category" (reset to root)
         const rootCat = categories.find((cat) => cat._id === selectedRoot);
         setFormData((prev) => ({
           ...prev,
@@ -55,7 +99,7 @@ export const AddSubCategory = () => {
         const sub = root?.children?.find((c) => c._id === value);
         setFormData((prev) => ({
           ...prev,
-          parentId: value, // Use sub category ID as parent
+          parentId: value,
           parentCatName: sub ? sub.name : "",
         }));
       }
@@ -78,11 +122,18 @@ export const AddSubCategory = () => {
       parentCatName: formData.parentCatName,
     };
 
-    const res = await CreateCategory(payload);
-    if (res && res.success) {
-      // Reset form
-      setFormData({ name: "", parentId: "", parentCatName: "" });
-      setSelectedRoot("");
+    try {
+      const res = await CateoryApi.UpdateCategory(formData._id, payload);
+      if (res.data.success) {
+        toast.success("SubCategory updated successfully");
+        handleClose();
+
+        // Refresh global categories if needed
+        const updatedRes = await GetCategory();
+        setCategories(updatedRes?.data || []);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error updating");
     }
   };
 
@@ -119,6 +170,13 @@ export const AddSubCategory = () => {
                 <select
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   name="SecondLevelCategory"
+                  value={
+                    categories
+                      .find((c) => c._id === selectedRoot)
+                      .children.some((child) => child._id === formData.parentId)
+                      ? formData.parentId
+                      : ""
+                  }
                   onChange={handleInput}
                 >
                   <option value="">Select Sub Category (For 3rd Level)</option>
@@ -134,10 +192,8 @@ export const AddSubCategory = () => {
               <br />
             </>
           )}
-
           <div>
             <h1 className="mb-1 dark:text-white">Sub Category Name</h1>
-
             <input
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               type="text"
@@ -156,14 +212,8 @@ export const AddSubCategory = () => {
           disabled={loading}
           className="!bg-blue-600 !rounded-md !px-4 !py-2 !text-white !flex !items-center !gap-2 disabled:opacity-50"
         >
-          {loading ? (
-            "Publishing..."
-          ) : (
-            <>
-              <FaCloudUploadAlt className="text-xl" />
-              Publish
-            </>
-          )}
+          <FaCloudUploadAlt className="text-xl" />
+          {loading ? "Updating..." : "Update SubCategory"}
         </Button>
       </form>
     </section>

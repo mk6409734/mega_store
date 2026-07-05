@@ -14,22 +14,22 @@ const productSchema = mongoose.Schema(
     SubcatId: { type: String, default: "" },
     ThirdcatName: { type: String, default: "" },
     ThirdcatId: { type: String, default: "" },
-      category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: true, 
-       
-      },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
     countInStock: { type: Number, default: 0 },
     rating: { type: Number, default: 0 },
     Isfeatured: { type: Boolean, default: false },
     discount: { type: Number, required: true },
+    sale: { type: Number, default:0 },
     productRam: [{ type: String, default: null }],
     size: [{ type: String, default: null }],
     productWeight: [{ type: String, default: null }],
     dateCreated: { type: Date, default: Date.now() },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const ProductModel = mongoose.model("Product", productSchema);
+ 

@@ -76,10 +76,11 @@ export const createCategory = async (req, res) => {
   try {
     const { name, images, parentCatName, parentId } = req.body;
 
+    
     // Validate input
-    if (!name || !Array.isArray(images) || images.length === 0) {
+    if (!name) {
       return res.status(400).json({
-        message: "Name and at least one image are required",
+        message: "Name is required",
         error: true,
         success: false,
       });
@@ -328,8 +329,8 @@ export const UpdateCategory = async (req, res) => {
     const category = await CategoryModel.findByIdAndUpdate(
       req.params.id,
       { name, images, parentCatName, parentId },
-      { new: true }
-    );  
+      { new: true },
+    );
 
     if (!category) {
       res.status(400).json({
@@ -340,7 +341,7 @@ export const UpdateCategory = async (req, res) => {
     }
 
     return res.status(201).json({
-      message:"Category updated successfully",
+      message: "Category updated successfully",
       category,
       success: true,
       error: false,

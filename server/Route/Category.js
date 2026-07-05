@@ -22,6 +22,7 @@ categoryRouter.post(
   uploadImages
 );
 categoryRouter.post("/createcategory", auth, createCategory);
+categoryRouter.put("/:id", auth, UpdateCategory);
 categoryRouter.get("/getcategory", getCategory);
 categoryRouter.get("/getcategory-count", getCategoryCount);
 categoryRouter.get("/getsubcategory-count", getSubCategoryCount);

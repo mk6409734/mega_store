@@ -25,33 +25,16 @@ import { Link } from "react-router-dom";
 
 import { MdOutlineModeEdit } from "react-icons/md";
 import Button from "@mui/material/Button";
-import { FaRegEye } from "react-icons/fa6";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import { LuTrash2 } from "react-icons/lu";
+import toast from "react-hot-toast";
 
 import { ProgressBar } from "../../Components/ProgressBar/ProgressBar";
 import { SearchBox } from "../../Components/SearchBox/SearchBox";
-
-function createData(id, userimage, username, useremail, userphone) {
-  return {
-    id,
-    userimage,
-    username,
-    useremail,
-    userphone,
-  };
-}
-
-const rows = [
-  createData(
-    1,
-
-    "/avatar.jpg",
-
-    "vikas kumar",
-    "vikes@gmail.com",
-    "+91-9311308218"
-  ),
-];
+import { adminStore } from "../../Store/Store";
+import { IoIosSearch } from "react-icons/io";
+import { UserEditForm } from "./UserEditForm";
+import { UserView } from "./UserView";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -71,28 +54,46 @@ function getComparator(order, orderBy) {
 
 const headCells = [
   {
-    id: "userimage",
+    id: "avatar",
     numeric: false,
     disablePadding: false,
     label: "User Image",
   },
   {
-    id: "username",
-    numeric: true,
+    id: "name",
+    numeric: false,
     disablePadding: true,
     label: "User Name",
   },
   {
-    id: "useremail",
-    numeric: true,
+    id: "email",
+    numeric: false,
     disablePadding: false,
     label: "User Email",
   },
   {
-    id: "userphone",
-    numeric: true,
+    id: "mobile",
+    numeric: false,
     disablePadding: false,
     label: "User Phone",
+  },
+  {
+    id: "role",
+    numeric: false,
+    disablePadding: false,
+    label: "Role",
+  },
+  {
+    id: "action",
+    numeric: false,
+    disablePadding: false,
+    label: "Action",
+  },
+  {
+    id: "passwords",
+    numeric: false,
+    disablePadding: false,
+    label: "Password",
   },
 ];
 
@@ -114,26 +115,25 @@ function EnhancedTableHead(props) {
       <TableRow>
         <TableCell
           padding="checkbox"
-          className="dark:!text-amber-50 !text-gray-700"
+          className="dark:text-amber-50! text-gray-700!"
         >
           <Checkbox
-            className="dark:!text-amber-50 !text-gray-700"
+            className="dark:text-amber-50! text-gray-700!"
             color="primary"
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             inputProps={{
-              "aria-label": "select all desserts",
+              "aria-label": "select all users",
             }}
           />
         </TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            // align={headCell.numeric ? "right" : "left"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
-            className="dark:!text-amber-50 !text-gray-700"
+            className="dark:text-amber-50! text-gray-700!"
           >
             <TableSortLabel
               active={orderBy === headCell.id}
@@ -176,7 +176,7 @@ function EnhancedTableToolbar(props) {
           bgcolor: (theme) =>
             alpha(
               theme.palette.primary.main,
-              theme.palette.action.activatedOpacity
+              theme.palette.action.activatedOpacity,
             ),
         },
       ]}
@@ -208,11 +208,53 @@ EnhancedTableToolbar.propTypes = {
 
 export default function Users() {
   const [order, setOrder] = React.useState("asc");
-  const [orderBy, setOrderBy] = React.useState("calories");
+  const [orderBy, setOrderBy] = React.useState("name");
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const [users, setUsers] = React.useState([]);
+  const [currentUserRole, setCurrentUserRole] = React.useState(null);
+  const [visiblePasswords, setVisiblePasswords] = React.useState({});
+  const { GetAllUsers, loading, handleClickOpen, DeleteUser } = adminStore();
+
+  const fetchUsers = async () => {
+    const res = await GetAllUsers();
+    if (res?.success) {
+      const usersList = res.data || [];
+      setUsers(usersList);
+      try {
+        const myEmailStr = localStorage.getItem("email");
+        if (myEmailStr) {
+          const myEmail = JSON.parse(myEmailStr);
+          const me = usersList.find((u) => u.email === myEmail);
+          if (me) {
+            setCurrentUserRole(me.role);
+          }
+        }
+      } catch (err) {
+        console.error("Error parsing email", err);
+      }
+    }
+  };
+
+  const handleTogglePassword = (e, userId) => {
+    e.stopPropagation();
+    if (currentUserRole === "Admin") {
+      setVisiblePasswords((prev) => ({
+        ...prev,
+        [userId]: !prev[userId],
+      }));
+    } else {
+      toast.error("Only Admin can view passwords!");
+    }
+  };
+
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -222,7 +264,7 @@ export default function Users() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
+      const newSelected = filteredUsers.map((n) => n._id);
       setSelected(newSelected);
       return;
     }
@@ -242,7 +284,7 @@ export default function Users() {
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
+        selected.slice(selectedIndex + 1),
       );
     }
     setSelected(newSelected);
@@ -261,24 +303,53 @@ export default function Users() {
     setDense(event.target.checked);
   };
 
+  const onViewUser = (user) => {
+    handleClickOpen(UserView, { user, title: "User Details" });
+  };
+
+  const onEditUser = (user) => {
+    handleClickOpen(UserEditForm, {
+      user,
+      title: "Edit User",
+      onSuccess: fetchUsers,
+    });
+  };
+
+  const onDeleteUser = async (user) => {
+    if (window.confirm(`Are you sure you want to delete user ${user.name}?`)) {
+      const res = await DeleteUser(user._id);
+      if (res?.success) {
+        fetchUsers();
+      }
+    }
+  };
+
+  const filteredUsers = React.useMemo(() => {
+    return users.filter(
+      (user) =>
+        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.mobile?.toString().includes(searchQuery),
+    );
+  }, [users, searchQuery]);
+
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredUsers.length) : 0;
 
   const visibleRows = React.useMemo(
     () =>
-      [...rows]
+      [...filteredUsers]
         .sort(getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, filteredUsers],
   );
 
   return (
     <div className="flex-1 py-4 px-5 dark:bg-zinc-700 bg-gray-100 h-full overflow-auto">
       <Box sx={{ width: "100%" }}>
         <Paper
-          // force Tailwind dark background to override MUI default when in dark mode
-          className="dark:!bg-zinc-700 !bg-white dark:!border  !border-zinc-600 "
+          className="dark:bg-zinc-700! bg-white! dark:border! border-zinc-600!"
           sx={{ width: "100%", mb: 2, mt: 2 }}
         >
           <EnhancedTableToolbar numSelected={selected.length} />
@@ -291,7 +362,16 @@ export default function Users() {
             </div>
 
             <div className="pr-5">
-              <SearchBox />
+              <div className="w-full h-auto bg-gray-100 relative overflow-hidden">
+                <IoIosSearch className="absolute top-3 left-3 z-50 pointer-events-none" />
+                <input
+                  type="text"
+                  className="w-full h-10 border border-gray-500 bg-gray-100 p-2 pl-8 focus:outline-none focus:border-gray-600 rounded-md"
+                  placeholder="Search here..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
           </div>
           <TableContainer>
@@ -306,28 +386,28 @@ export default function Users() {
                 orderBy={orderBy}
                 onSelectAllClick={handleSelectAllClick}
                 onRequestSort={handleRequestSort}
-                rowCount={rows.length}
+                rowCount={filteredUsers.length}
               />
               <TableBody>
                 {visibleRows.map((row, index) => {
-                  const isItemSelected = selected.includes(row.id);
+                  const isItemSelected = selected.includes(row._id);
                   const labelId = `enhanced-table-checkbox-${index}`;
 
                   return (
                     <TableRow
                       hover
-                      onClick={(event) => handleClick(event, row.id)}
+                      onClick={(event) => handleClick(event, row._id)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row.id}
+                      key={row._id}
                       selected={isItemSelected}
                       sx={{ cursor: "pointer" }}
                       className="dark:hover:bg-zinc-600 hover:bg-gray-50"
                     >
                       <TableCell padding="checkbox">
                         <Checkbox
-                          className="dark:!text-amber-50 !text-gray-700"
+                          className="dark:text-amber-50! text-gray-700!"
                           color="primary"
                           checked={isItemSelected}
                           inputProps={{
@@ -336,39 +416,104 @@ export default function Users() {
                         />
                       </TableCell>
                       <TableCell
-                        sx={{ width: 300, pl:5  }}
+                        sx={{ width: 300, pl: 5 }}
                         component="th"
                         id={labelId}
                         scope="row"
-                        padding="left"
+                        padding="none"
                       >
-                        <div className="rounded-md  overflow-hidden flex justify-center items-center  w-15 min-w-22 group">
-                          <Link to="/product/43434">
-                            <img
-                              className="w-full group-hover:scale-105"
-                              src={row.userimage}
-                              alt="fdd"
-                            />
-                          </Link>
+                        <div className="rounded-md overflow-hidden flex justify-start items-center ml-2 p-1">
+                          <img
+                            className="w-12 h-12 object-cover rounded-full border border-gray-300 shadow-sm"
+                            src={row.avatar || "/avatar.jpg"}
+                            alt={row.name}
+                            onError={(e) => {
+                              e.target.src = "/avatar.jpg";
+                            }}
+                          />
                         </div>
                       </TableCell>
                       <TableCell
                         align="left"
-                        className="dark:!text-amber-50 !text-gray-700"
+                        className="dark:text-amber-50! text-gray-700!"
                       >
-                        {row.username}
+                        {row.name}
                       </TableCell>
                       <TableCell
                         align="left"
-                        className="dark:!text-amber-50 !text-gray-700"
+                        className="dark:text-amber-50! text-gray-700!"
                       >
-                        {row.useremail}
+                        {row.email}
                       </TableCell>
                       <TableCell
                         align="left"
-                        className="dark:!text-amber-50 !text-gray-700"
+                        className="dark:text-amber-50! text-gray-700!"
                       >
-                        {row.userphone}
+                        {row.mobile || "N/A"}
+                      </TableCell>
+                      <TableCell
+                        align="left"
+                        className="dark:text-amber-50! text-gray-700!"
+                      >
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${row.role === "Admin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+                        >
+                          {row.role}
+                        </span>
+                      </TableCell>
+                      <TableCell align="left">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewUser(row);
+                            }}
+                            className="w-[34px]! h-[34px]! min-w-[34px]! rounded-full! bg-blue-50! text-blue-600! hover:bg-blue-100!"
+                          >
+                            <FaRegEye />
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditUser(row);
+                            }}
+                            className="w-[34px]! h-[34px]! min-w-[34px]! rounded-full! bg-green-50! text-green-600! hover:bg-green-100!"
+                          >
+                            <MdOutlineModeEdit />
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteUser(row);
+                            }}
+                            className="w-[34px]! h-[34px]! min-w-[34px]! rounded-full! bg-red-50! text-red-600! hover:bg-red-100!"
+                          >
+                            <LuTrash2 />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell align="left">
+                        <div className="flex items-center gap-2 dark:text-amber-50! text-gray-700!">
+                          <span className="min-w-[60px]">
+                            {!row.password
+                              ? "N/A"
+                              : visiblePasswords[row._id]
+                                ? row.password
+                                : "********"}
+                          </span>
+                          {row.password && (
+                            <Button
+                              onClick={(e) => handleTogglePassword(e, row._id)}
+                              className="w-[30px]! h-[30px]! min-w-[30px]! rounded-full! bg-gray-100! text-gray-600! hover:bg-gray-200! dark:bg-zinc-600! dark:text-gray-300!"
+                            >
+                              {visiblePasswords[row._id] ? (
+                                <FaRegEyeSlash />
+                              ) : (
+                                <FaRegEye />
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -379,7 +524,18 @@ export default function Users() {
                       height: (dense ? 33 : 53) * emptyRows,
                     }}
                   >
-                    <TableCell colSpan={6} />
+                    <TableCell colSpan={7} />
+                  </TableRow>
+                )}
+                {!loading && filteredUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      align="center"
+                      className="dark:text-amber-50 py-10"
+                    >
+                      No users found.
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -388,7 +544,7 @@ export default function Users() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={rows.length}
+            count={filteredUsers.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

@@ -27,24 +27,28 @@ export const uploadImages = async (req, res) => {
       overwrite: false,
     };
 
-    const uploadedUrls = [];
-
-    // Upload each file and wait for completion
-    for (const file of files) {
+    // Upload each file and wait for completion in parallel
+    const uploadPromises = files.map(async (file) => {
       try {
         const result = await cloudinary.uploader.upload(file.path, options);
-        uploadedUrls.push(result.secure_url);
         // Clean up temporary file after successful upload
-        fs.unlinkSync(file.path);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
         console.log(`Uploaded: ${file.filename}`);
+        return result.secure_url;
       } catch (uploadError) {
         console.error(`Error uploading ${file.filename}:`, uploadError);
         // Clean up file even if upload failed
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);
         }
+        return null;
       }
-    }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const uploadedUrls = results.filter((url) => url !== null);
 
     if (!uploadedUrls.length) {
       return res.status(400).json({
@@ -143,20 +147,15 @@ export const CreateProduct = async (req, res) => {
 export const getAllProduct = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const perpage = parseInt(req.query.perpage);
+    const perpage = parseInt(req.query.perpage) || 10;
     const totalProducts = await ProductModel.countDocuments();
-    const totalPages = Math.ceil(totalProducts / perpage);
+    const totalPages = Math.ceil(totalProducts / perpage) || 1;
 
-    if (page > totalPages) {
-      return res
-        .status(400)
-        .json({ message: "page not found", error: true, success: false });
-    }
     const product = await ProductModel.find()
-      .populate("Category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
+
     if (!product) {
       return res.status(400).json({
         message: "Product not exist!",
@@ -237,7 +236,7 @@ export const getAllProductByCatName = async (req, res) => {
         .json({ message: "page not found", error: true, success: false });
     }
     const product = await ProductModel.find({ catName: req.query.catName })
-      .populate("Category")
+      .populate("category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
@@ -280,7 +279,7 @@ export const getAllProductBySubCatId = async (req, res) => {
         .json({ message: "page not found", error: true, success: false });
     }
     const product = await ProductModel.find({ SubcatId: req.params.id })
-      .populate("Category")
+      .populate("category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
@@ -323,7 +322,7 @@ export const getAllProductBySubCatName = async (req, res) => {
     const product = await ProductModel.find({
       SubcatName: req.query.SubcatName,
     })
-      .populate("Category")
+      .populate("category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
@@ -366,7 +365,7 @@ export const getAllProductByThirdCatId = async (req, res) => {
         .json({ message: "page not found", error: true, success: false });
     }
     const product = await ProductModel.find({ ThirdcatId: req.params.id })
-      .populate("Category")
+      .populate("category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
@@ -409,7 +408,7 @@ export const getAllProductByThirdCatName = async (req, res) => {
     const product = await ProductModel.find({
       ThirdcatName: req.query.ThirdcatName,
     })
-      .populate("Category")
+      .populate("category")
       .skip((page - 1) * perpage)
       .limit(perpage)
       .exec();
@@ -443,7 +442,7 @@ export const getAllProductByPrice = async (req, res) => {
     if (req.query.catId != "" && req.query.catId !== undefined) {
       const product = await ProductModel.find({
         catId: req.query.catId,
-      }).populate("Category");
+      }).populate("category");
 
       productList.push(product);
     }
@@ -451,7 +450,7 @@ export const getAllProductByPrice = async (req, res) => {
     if (req.query.SubcatId != "" && req.query.SubcatId !== undefined) {
       const product = await ProductModel.find({
         SubcatId: req.query.SubcatId,
-      }).populate("Category");
+      }).populate("category");
 
       productList.push(product);
     }
@@ -459,7 +458,7 @@ export const getAllProductByPrice = async (req, res) => {
     if (req.query.ThirdcatId != "" && req.query.ThirdcatId !== undefined) {
       const product = await ProductModel.find({
         ThirdcatId: req.query.ThirdcatId,
-      }).populate("Category");
+      }).populate("category");
 
       productList.push(product);
     }
@@ -511,7 +510,7 @@ export const getAllProductByRating = async (req, res) => {
         rating: req.query.rating,
         catId: req.query.catId,
       })
-        .populate("Category")
+        .populate("category")
         .skip((page - 1) * perpage)
         .limit(perpage)
         .exec();
@@ -522,7 +521,7 @@ export const getAllProductByRating = async (req, res) => {
         rating: req.query.rating,
         SubcatId: req.query.SubcatId,
       })
-        .populate("Category")
+        .populate("category")
         .skip((page - 1) * perpage)
         .limit(perpage)
         .exec();
@@ -533,7 +532,7 @@ export const getAllProductByRating = async (req, res) => {
         rating: req.query.rating,
         ThirdcatId: req.query.ThirdcatId,
       })
-        .populate("Category")
+        .populate("category")
         .skip((page - 1) * perpage)
         .limit(perpage)
         .exec();
@@ -595,7 +594,7 @@ export const getAllProductByCount = async (req, res) => {
 export const getAllProductByFeatured = async (req, res) => {
   try {
     const product = await ProductModel.find({ Isfeatured: true }).populate(
-      "Category"
+      "category",
     );
 
     if (!product) {
@@ -675,7 +674,7 @@ export const deleteProduct = async (req, res) => {
 export const getProduct = async (req, res) => {
   try {
     const product = await ProductModel.findById(req.params.id).populate(
-      "category"
+      "category",
     );
 
     if (!product) {
@@ -795,7 +794,7 @@ export const UpdateProduct = async (req, res) => {
         size,
         productWeight,
       },
-      { new: true }
+      { new: true },
     );
     if (!updatedProduct) {
       return res.status(400).json({

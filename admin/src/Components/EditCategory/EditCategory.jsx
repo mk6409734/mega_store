@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UploadBox } from "../UploadBox/UploadBox";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
@@ -6,44 +6,79 @@ import { IoClose } from "react-icons/io5";
 import Button from "@mui/material/Button";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { adminStore } from "../../Store/Store";
+import { CateoryApi } from "../../utils/api";
+import toast from "react-hot-toast";
 
-export const AddCategory = () => {
+export const EditCategory = ({ categoryId }) => {
   const [data, setdata] = useState({
     name: "",
     images: [],
     parentCatName: "",
   });
 
-  const { CreateCategory, DeleteImage, handleClose,setCategories, GetCategory } =
+  const { handleClose, setCategories, GetCategory, dialogProps, DeleteImage } =
     adminStore();
 
-  const image = JSON.parse(localStorage.getItem("image"));
+  const image = JSON.parse(localStorage.getItem("image")) || [];
+
+  useEffect(() => {
+    if (dialogProps?.categoryData) {
+      const categoryData = dialogProps.categoryData;
+      setdata({
+        name: categoryData.name || "",
+        images: categoryData.images || [],
+        parentCatName: categoryData.parentCatName || "",
+      });
+      if (categoryData.images?.[0]) {
+        localStorage.setItem("image", JSON.stringify(categoryData.images));
+      }
+    }
+  }, [dialogProps?.categoryData]);
+
   const handleRemovePhoto = async () => {
     const images = Array.isArray(image) ? image : image ? [image] : [];
     const imageUrl = images[0];
     if (!imageUrl) return;
-    await DeleteImage(imageUrl);
+
+    await DeleteImage(imageUrl)
   };
 
   const handleInput = (e) => {
     const { name, value } = e.target;
     setdata((prev) => ({ ...prev, [name]: value }));
-    console.log(`${name} changed:`, value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const storedImages = JSON.parse(localStorage.getItem("image")) || [];
-    const images = Array.isArray(storedImages) ? storedImages : [storedImages];
+    const images = Array.isArray(storedImages)
+      ? storedImages
+      : storedImages
+      ? [storedImages]
+      : [];
     const payload = {
       ...data,
       images,
     };
-    await CreateCategory(payload);
-    localStorage.removeItem("image");
-    handleClose();
-     const updatedRes = await GetCategory();
-     setCategories(updatedRes?.data || []);
+
+    try {
+      const res = await CateoryApi.UpdateCategory(
+        dialogProps?.categoryData?._id,
+        payload
+      );
+      if (res.data.success) {
+        toast.success("Category updated successfully");
+        localStorage.removeItem("image");
+        handleClose();
+        const updatedRes = await GetCategory();
+        setCategories(updatedRes?.data || []);
+      }
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Error updating category";
+      toast.error(errorMsg);
+      console.error("Update error:", error);
+    }
   };
 
   return (
@@ -65,8 +100,8 @@ export const AddCategory = () => {
           <h1 className="font-semibold mb-5 dark:text-white">
             Category Images
           </h1>
-          <div className="grid grid-cols-7 gap-4">
-            {image && (
+          {image && ( <div className="grid grid-cols-7 gap-4">
+            
               <div className="relative">
                 <span
                   onClick={handleRemovePhoto}
@@ -75,7 +110,7 @@ export const AddCategory = () => {
                   <IoClose className="text-white" />
                 </span>
                 <div className="relative rounded-md overflow-hidden border border-dashed border-gray-500 h-40 w-full bg-gray-50 cursor-pointer hover:bg-gray-100 flex flex-col items-center justify-center">
-                  <LazyLoadImage
+                   <LazyLoadImage
                     className="w-full h-full object-cover"
                     alt={"image"}
                     effect="blur"
@@ -87,12 +122,14 @@ export const AddCategory = () => {
                       style: { transitionDelay: "1s" },
                     }}
                   />
+                 
                 </div>
               </div>
-            )}
+            
 
             <UploadBox multiple={true} />
-          </div>
+          </div>)}
+         
         </div>
 
         <br />

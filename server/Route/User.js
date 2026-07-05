@@ -14,8 +14,12 @@ import {
   RefreshToken,
   UserDetails,
   RegenrateOTP,
+  UserAllDetails,
+  DeleteUser,
+  AdminUpdateUser,
 } from "../Controllers/User.js";
 import { auth } from "../middlewares/auth.js";
+import { admin } from "../middlewares/admin.js";
 import { upload } from "../middlewares/multer.js";
 import { check } from "express-validator";
 
@@ -58,3 +62,8 @@ userRouter.post("/verifyforgotpassword", VerifyForgotpassword);
 userRouter.post("/resetpassword", Resetpassword);
 userRouter.post("/refresh-token", RefreshToken);
 userRouter.get("/user-details", auth, UserDetails);
+userRouter.get("/user-all-details", auth, UserAllDetails);
+
+// Admin Routes for User Management
+userRouter.delete("/delete-user/:id", auth, admin, DeleteUser);
+userRouter.put("/admin-update-user/:id", auth, admin, AdminUpdateUser);

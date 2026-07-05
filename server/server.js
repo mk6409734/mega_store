@@ -11,6 +11,7 @@ import { ProductRouter } from "./Route/Product.js";
 import { CartRouter } from "./Route/Cart.js";
 import { MyListRouter } from "./Route/MyList.js";
 import { AddressRouter } from "./Route/Address.js";
+import { SliderRouter } from "./Route/HomeSlider.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   
 ];
 app.use(
@@ -53,6 +55,7 @@ app.use("/api/product", ProductRouter);
 app.use("/api/cart", CartRouter);
 app.use("/api/mylist", MyListRouter);
 app.use("/api/address", AddressRouter);
+app.use("/api/slider", SliderRouter);
 
 
 connectDb().then(() => {

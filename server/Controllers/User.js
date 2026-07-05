@@ -62,7 +62,7 @@ export const Register = async (req, res) => {
         email: user.email,
         id: user._id,
       },
-      process.env.JWT_TOKEN
+      process.env.JWT_TOKEN,
     );
 
     return res.status(200).json({
@@ -95,10 +95,10 @@ export const VerifyEmail = async (req, res) => {
     const isNotExpired = user.otp_expiry > Date.now();
 
     if (isCodeValid && isNotExpired) {
-      (user.verify_email = true),
+      ((user.verify_email = true),
         (user.otp = null),
         (user.otp_expiry = null),
-        await user.save();
+        await user.save());
       return res.status(200).json({
         error: false,
         success: true,
@@ -350,7 +350,7 @@ export const UserAvatar = async (req, res) => {
         success: false,
       });
     }
-    (user.avatar = uploadedUrls[0]), await user.save();
+    ((user.avatar = uploadedUrls[0]), await user.save());
 
     return res.status(200).json({
       _id: userId,
@@ -453,7 +453,7 @@ export const UpdateUser = async (req, res) => {
         otp: verifyCode !== "" ? verifyCode : null,
         otp_expiry: verifyCode !== "" ? Date.now() + 600000 : "",
       },
-      { new: true }
+      { new: true },
     );
 
     if (email !== user.email) {
@@ -492,7 +492,7 @@ export const Forgotpassword = async (req, res) => {
 
     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    (user.otp = verifyCode), (user.otp_expiry = Date.now() + 600000);
+    ((user.otp = verifyCode), (user.otp_expiry = Date.now() + 600000));
 
     await user.save();
 
@@ -634,7 +634,7 @@ export const RefreshToken = async (req, res) => {
 
     const verifyToken = jwt.verify(
       refresh_token,
-      process.env.SECRET_KEY_REFRESH_TOKEN
+      process.env.SECRET_KEY_REFRESH_TOKEN,
     );
 
     if (!verifyToken) {
@@ -682,6 +682,26 @@ export const UserDetails = async (req, res) => {
 
     return res.status(200).json({
       message: "User details",
+      data: user,
+      success: true,
+      error: false,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      success: false,
+      error: true,
+    });
+  }
+};
+export const UserAllDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    // const user = await UserModel.findById(userId).select('-password -refresh_token')
+    const user = await UserModel.find();
+
+    return res.status(200).json({
+      message: "User Fetched succesfully",
       data: user,
       success: true,
       error: false,
@@ -770,6 +790,62 @@ export const GoogleLogin = async (req, res) => {
       message: error.message || "Google Login failed",
       error: true,
       success: false,
+    });
+  }
+};
+
+export const DeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        error: true,
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      message: "User deleted successfully",
+      success: true,
+      error: false,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      success: false,
+      error: true,
+    });
+  }
+};
+
+export const AdminUpdateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, status, name, email, mobile } = req.body;
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      { role, status, name, email, mobile },
+      { new: true },
+    );
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        error: true,
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      message: "User updated successfully",
+      success: true,
+      error: false,
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      success: false,
+      error: true,
     });
   }
 };

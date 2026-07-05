@@ -22,15 +22,41 @@ export const Profile = () => {
     UpdateUser,
     ResetPassword,
     handleClickOpen,
+    GetUser,
   } = adminStore();
   const [uploading, setUploading] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [formFields, setFormFields] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+  });
+  const [changePass, setChangePass] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [openPasspanel, setOpenPassPanel] = useState(false);
+  const navigate = useNavigate();
 
-  const name = JSON.parse(localStorage.getItem("name")) || "Guest";
-  const email =
-    JSON.parse(localStorage.getItem("email")) || "email@example.com";
-  const avatar = localStorage.getItem("avatar")
-    ? JSON.parse(localStorage.getItem("avatar"))
-    : null;
+  const fetchUserData = async () => {
+    const res = await GetUser();
+    if (res?.success) {
+      setUserData(res.data);
+      setFormFields({
+        name: res.data.name || "",
+        email: res.data.email || "",
+        mobile: res.data.mobile || "",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!islogin) {
+      navigate("/");
+    } else {
+      fetchUserData();
+    }
+  }, [islogin]);
 
   const OnChangeFile = async (e) => {
     const files = e.target.files;
@@ -60,6 +86,7 @@ export const Profile = () => {
         toast.success(res.data.message || "Image Uploaded Successfully");
         const newAvatar = res.data.avatar;
         localStorage.setItem("avatar", JSON.stringify(newAvatar));
+        fetchUserData(); // Refresh user data to get updated avatar
       } else {
         toast.error(res.data.message || "Upload failed");
       }
@@ -77,9 +104,10 @@ export const Profile = () => {
   const handleRemovePhoto = async () => {
     try {
       setUploading(true);
-      await authAPI.removeAvatar(avatar);
+      await authAPI.removeAvatar(userData?.avatar);
       toast.success("Avatar removed successfully");
       localStorage.removeItem("avatar");
+      fetchUserData();
     } catch (err) {
       console.error("Remove avatar failed:", err);
     } finally {
@@ -87,48 +115,16 @@ export const Profile = () => {
     }
   };
 
-  const [formFields, setFormFields] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-  });
-  const [changePass, setChangePass] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [openPasspanel, setOpenPassPanel] = useState(false);
-  const navigate = useNavigate();
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormFields((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleChange2 = (e) => {
     const { name, value } = e.target;
 
     setChangePass((prev) => ({ ...prev, [name]: value }));
   };
-
-  useEffect(() => {
-    if (!islogin) {
-      navigate("/");
-    }
-  }, [islogin]);
-
-  useEffect(() => {
-    const name = localStorage.getItem("name");
-    const email = localStorage.getItem("email");
-    const mobile = localStorage.getItem("mobile");
-
-    if (name || email || mobile) {
-      setFormFields((prev) => ({
-        ...prev,
-        name: name ? JSON.parse(name) || "" : "",
-        email: email ? JSON.parse(email) || "" : "",
-        mobile: mobile ? String(JSON.parse(mobile) || "") : "",
-      }));
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -138,6 +134,8 @@ export const Profile = () => {
       mobile: formFields.mobile,
     });
     if (res.success) {
+      // Refresh user data or redirect to login if session needs reset
+      // Reacting to user's existing logic of logging out after update
       localStorage.removeItem("name");
       localStorage.removeItem("email");
       localStorage.removeItem("avatar");
@@ -195,16 +193,16 @@ export const Profile = () => {
               <div className="w-24 h-24 rounded-full overflow-hidden mb-4 relative flex items-center justify-center bg-gray-200">
                 {uploading ? (
                   <CircularProgress color="inherit" />
-                ) : avatar ? (
+                ) : userData?.avatar ? (
                   <img
-                    src={avatar || "/user-image.png"}
+                    src={userData?.avatar || "/user-image.png"}
                     alt="user"
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   <div className="bg-gray-700 rounded-full w-full h-full flex items-center justify-center">
                     <span className="text-2xl font-semibold text-white">
-                      {(name[0] || "").toUpperCase()}
+                      {(userData?.name?.[0] || "").toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -225,7 +223,7 @@ export const Profile = () => {
                 )}
               </div>
 
-              {avatar && (
+              {userData?.avatar && (
                 <button
                   type="button"
                   title="Remove photo"
@@ -275,7 +273,7 @@ export const Profile = () => {
                       setFormFields((prev) => ({ ...prev, mobile: phone }))
                     }
                     className="w-full"
-              inputClassName="!bg-gray-50 !border !border-gray-300 !text-gray-900 !text-sm !rounded-r-lg !focus:ring-blue-500 !focus:border-blue-500 !block !w-full !py-5.5 dark:!bg-gray-700 dark:!border-gray-600 dark:!placeholder-gray-400 dark:!text-white dark:!focus:ring-blue-500 dark:!focus:border-blue-500 !mt-1.5"
+                    inputClassName="!bg-gray-50 !border !border-gray-300 !text-gray-900 !text-sm !rounded-r-lg !focus:ring-blue-500 !focus:border-blue-500 !block !w-full !py-5.5 dark:!bg-gray-700 dark:!border-gray-600 dark:!placeholder-gray-400 dark:!text-white dark:!focus:ring-blue-500 dark:!focus:border-blue-500 !mt-1.5"
                   />
                 </div>
               </div>
@@ -316,12 +314,11 @@ export const Profile = () => {
             <div className="flex items-center gap-5 w-full">
               <div className="w-1/2">
                 <input
-                 type="password"
+                  type="password"
                   name="newPassword"
                   value={changePass.newPassword}
                   onChange={handleChange2}
                   placeholder="New Password"
-                  
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
               </div>
@@ -330,12 +327,11 @@ export const Profile = () => {
                       w-1/2"
               >
                 <input
-                type="password"
+                  type="password"
                   name="confirmPassword"
                   value={changePass.confirmPassword}
                   onChange={handleChange2}
                   placeholder="Confirm Password"
-                  
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
               </div>

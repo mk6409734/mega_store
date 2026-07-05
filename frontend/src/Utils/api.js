@@ -73,3 +73,7 @@ export const AddressApi = {
   addAddress: (address) => api.post("/address/add-address", address),
   getAddress: () => api.get("/address/get-address"),
 };
+
+export const HomeSliderApi = {
+  getAll: () => api.get("/slider/all"),
+};
