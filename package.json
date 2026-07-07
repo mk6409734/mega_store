@@ -1,0 +1,25 @@
+{
+  "name": "mega_store",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "npm i --prefix server && npm i --prefix frontend && npm i --prefix admin",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix frontend\" \"npm run dev --prefix admin\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk6409734/mega_store.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/mk6409734/mega_store/issues"
+  },
+  "homepage": "https://github.com/mk6409734/mega_store#readme",
+  "dependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

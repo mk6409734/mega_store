@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { HomeSlider } from "../components/HomeSlider";
 import { HomeCatSlider } from "../components/HomeCatSlider";
 import { LiaShippingFastSolid } from "react-icons/lia";
@@ -11,8 +11,19 @@ import { HomeSliderV2 } from "../components/HomeSliderV2";
 import { BannerBoxV2 } from "../components/BannerBoxV2";
 import { AdsBannerSliderV2 } from "../components/AdsBannerSliderV2";
 import { Footer } from "../components/Footer";
+import { ProductStore } from "../Store/Product";
 
 export const Home = () => {
+  const { GetProducts, product } = ProductStore();
+
+  useEffect(() => {
+    GetProducts();
+  }, []);
+
+  useEffect(() => {
+    console.log("mohit", product);
+  }, [product]);
+
   return (
     <div className="min-w-screen">
       <HomeSlider />
@@ -22,21 +33,22 @@ export const Home = () => {
             <HomeSliderV2 />
           </div>
           <div className="w-[30%] flex items-center justify-between gap-5 flex-col">
+           
+              <BannerBoxV2
+              
+                info="left"
+                image={"./slippers.webp"}
+                title={"Cloker Men Flip Flops (Black , 7)"}
+                price={"₹184.0"}
+              />
+         
             <BannerBoxV2
               info="left"
               image={
-                "https://serviceapi.spicezgold.com/download/1741664665391_1741497254110_New_Project_50.jpg"
+                "./watch.webp"
               }
-              title={"Buy Men's Footwear with low price"}
-              price={"₹1,500.0"}
-            />
-            <BannerBoxV2
-              info="right"
-              image={
-                "https://serviceapi.spicezgold.com/download/1741664496923_1737020250515_New_Project_47.jpg"
-              }
-              title={"Apple Iphone 13 128Gb, Pink"}
-              price={"₹35,500.0"}
+              title={"Agg traders new trending mens ice out diamond studded"}
+              price={"₹265"}
             />
           </div>
         </div>

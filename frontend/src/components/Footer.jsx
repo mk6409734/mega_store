@@ -145,6 +145,9 @@ export const Footer = () => {
                   className="w-full h-11 border border-gray-300 outline-none px-4 rounded-md focus:border-gray-500 mb-4"
                   placeholder="Your Email Address"
                 />
+                <div className="flex items-center gap-5">
+
+                
                 <Button className="!bg-primary !text-white !rounded-sm !capitalize !px-3 !p-2">
                   Subscribe
                 </Button>
@@ -152,6 +155,7 @@ export const Footer = () => {
                   control={<Checkbox />}
                   label="I agree to the terms and conditions and the privacy policy"
                 />
+                </div>
               </form>
             </div>
           </div>
@@ -208,7 +212,7 @@ export const Footer = () => {
             </li>
           </ul>
           <p className="text-sm text-center mb-0">
-            &#169; 2025 - Ecommerce Template
+            &#169; {new Date().getFullYear()} - ClassyShop
           </p>
           <div className="flex items-center gap-1">
             <img

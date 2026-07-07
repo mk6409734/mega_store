@@ -77,3 +77,7 @@ export const AddressApi = {
 export const HomeSliderApi = {
   getAll: () => api.get("/slider/all"),
 };
+
+export const ProductAPI = {
+  getAll: () => api.get("/product/getallproducts")
+}

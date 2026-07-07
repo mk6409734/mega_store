@@ -2,9 +2,9 @@ import React from "react";
 import {Link} from "react-router-dom";
 export const BannerBoxV2 = (props) => {
   return (
-    <div className="w-full overflow-hidden rounded-md group relative">
+    <div className="w-full overflow-hidden rounded-lg border border-gray-200 shadow-lg group relative">
       <img
-        className="bannerBoxV2 w-full transition-all duration-150 group-hover:scale-105"
+        className="bannerBoxV2  transition-all duration-150 group-hover:scale-105"
         src={props.image}
         alt=""
       />
