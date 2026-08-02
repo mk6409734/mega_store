@@ -163,7 +163,7 @@ export const Login = async (req, res) => {
       error: true,
       success: false,
     });
-  }
+}
   try {
     const { email, password } = req.body;
 
@@ -176,7 +176,16 @@ export const Login = async (req, res) => {
         success: false,
       });
     }
+    // const checkPassword = await bcryptjs.compare(password, user.password);
+    const checkPassword = password === user.password ? true : false;
 
+    if (!checkPassword) {
+      return res.status(400).json({
+        message: "Please check your password",
+        error: true,
+        success: false,
+      });
+    }
     if (user.status !== "Active") {
       return res.status(400).json({
         message: "Please contact to admin",
@@ -194,17 +203,6 @@ export const Login = async (req, res) => {
       await user.save();
       return res.status(400).json({
         message: "Your email is not verified",
-        error: true,
-        success: false,
-      });
-    }
-
-    // const checkPassword = await bcryptjs.compare(password, user.password);
-    const checkPassword = password === user.password ? true : false;
-
-    if (!checkPassword) {
-      return res.status(400).json({
-        message: "Please check your password",
         error: true,
         success: false,
       });

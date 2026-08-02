@@ -145,7 +145,7 @@ export const adminStore = create((set, get) => ({
     set({ loading: true });
     try {
       const res = await authAPI.login(credential);
-      console.log(res);
+      console.log("#############################",res);
       if (res.data.success) {
         toast.success(res.data.message || "Login Successfully!");
         localStorage.setItem("accesstoken", res.data?.data?.accesstoken);
@@ -159,7 +159,7 @@ export const adminStore = create((set, get) => ({
         set({ islogin: true });
         return res.data;
       } else {
-        // toast.error(res.data.message || "Registration failed");
+        toast.error(res.data.message);
         set({ message: res.data.message });
         return res.data;
       }
@@ -547,6 +547,30 @@ export const adminStore = create((set, get) => ({
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || "Failed to delete product";
+      toast.error(errorMsg);
+      return error.response?.data || { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  DeleteMultipleProducts: async (ids) => {
+    set({ loading: true });
+    try {
+      const res = await ProductApi.DeleteMultipleProducts(ids);
+      if (res.data.success) {
+        toast.success(res.data.message || "Products deleted successfully");
+        // remove from local state
+        set((state) => ({
+          products: state.products.filter((p) => !ids.includes(p._id)),
+        }));
+      } else {
+        toast.error(res.data.message || "Failed to delete products");
+      }
+      return res.data;
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Failed to delete products";
       toast.error(errorMsg);
       return error.response?.data || { success: false };
     } finally {

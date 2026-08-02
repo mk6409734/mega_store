@@ -192,7 +192,7 @@ function ConfirmDeleteDialog({ open, onConfirm, onCancel, count }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ProductTable2() {
-  const { products, loading, GetAllProducts, DeleteProduct, GetCategory } =
+  const { products, loading, GetAllProducts, DeleteProduct, DeleteMultipleProducts, GetCategory } =
     adminStore();
 
   const [order, setOrder] = React.useState("asc");
@@ -304,8 +304,10 @@ export default function ProductTable2() {
 
   const handleConfirmDelete = async () => {
     setConfirmOpen(false);
-    for (const id of pendingDeleteIds) {
-      await DeleteProduct(id);
+    if (pendingDeleteIds.length === 1) {
+      await DeleteProduct(pendingDeleteIds[0]);
+    } else if (pendingDeleteIds.length > 1) {
+      await DeleteMultipleProducts(pendingDeleteIds);
     }
     setSelected((prev) => prev.filter((id) => !pendingDeleteIds.includes(id)));
     setPendingDeleteIds([]);

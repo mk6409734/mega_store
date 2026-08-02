@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import { ProductModel } from "../Models/Product.js";
+import { ServerError } from "../middlewares/error.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -667,6 +668,49 @@ export const deleteProduct = async (req, res) => {
       error: true,
       success: false,
     });
+  }
+};
+
+// delete multiple products
+
+export const deleteMultipleProduct = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ error: true, success: false, message: "invalid input" });
+    }
+
+    const products = await ProductModel.find({ _id: { $in: ids } });
+
+    for (const product of products) {
+      const images = product.images || [];
+
+      for (let img of images) {
+        try {
+          const urlArr = img.split("/");
+          const image = urlArr[urlArr.length - 1];
+          const imageName = image.split(".")[0];
+          if (imageName) {
+            await cloudinary.uploader.destroy(imageName);
+          }
+        } catch (imgError) {
+          console.error("Cloudinary deletion error:", imgError);
+        }
+      }
+    }
+
+    await ProductModel.deleteMany({ _id: { $in: ids } });
+
+    return res.status(200).json({
+      message: "Products deleted successfully",
+      error: false,
+      success: true,
+    });
+  } catch (error) {
+    ServerError();
   }
 };
 

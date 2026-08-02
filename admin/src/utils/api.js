@@ -13,6 +13,20 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accesstoken");
+    
+    // if (!token) {
+    //   const publicPaths = [
+    //     "/login",
+    //     "/signup",
+    //     "/forgot-password",
+    //     "/verify-account",
+    //     "/change-password"
+    //   ];
+    //   if (!publicPaths.includes(window.location.pathname)) {
+    //     window.location.href = "/login";
+    //   }
+    // }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -120,6 +134,7 @@ export const ProductApi = {
   GetAllProducts: (page = 1, perpage = 10) =>
     api.get("/product/getallproducts", { params: { page, perpage } }),
   DeleteProduct: (id) => api.delete(`/product/${id}`),
+  DeleteMultipleProducts: (ids) => api.delete(`/product/deletemultiple`, { data: { ids } }),
   UpdateProduct: (id, data) => api.put(`/product/updateproduct/${id}`, data),
   GetProduct: (id) => api.get(`/product/${id}`),
 };
